@@ -1,6 +1,7 @@
 package com.example.quinsta
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -82,16 +83,29 @@ class MainActivity : ComponentActivity() {
                         DropdownMenu(expanded = mDisplayMenu,
                             onDismissRequest = { mDisplayMenu = false }) {
                             DropdownMenuItem(onClick = {
-                                Toast.makeText(
-                                    mContext, "Settings", Toast.LENGTH_SHORT
-                                ).show()
+                                val sendIntent = Intent()
+                                sendIntent.action = Intent.ACTION_SEND
+                                sendIntent.putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "Hey check out my app at: https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID
+                                )
+                                sendIntent.type = "text/plain"
+                                startActivity(sendIntent)
                             }) {
                                 Text(text = "Share")
                             }
                             DropdownMenuItem(onClick = {
-                                Toast.makeText(
-                                    mContext, "Logout", Toast.LENGTH_SHORT
-                                ).show()
+                                val uri: Uri = Uri.parse("market://details?id=$packageName")
+                                val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+                                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or
+                                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                                try {
+                                    startActivity(goToMarket)
+                                } catch (e: ActivityNotFoundException) {
+                                    startActivity(Intent(Intent.ACTION_VIEW,
+                                        Uri.parse("http://play.google.com/store/apps/details?id=$packageName")))
+                                }
                             }) {
                                 Text(text = "Rate")
                             }
