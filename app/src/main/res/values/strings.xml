@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Quinsta</string>
+    <string name="title_activity_panoroma">PanoromaActivity</string>
+    <string name="title_activity_panoromm_view">PanorommViewActivity</string>
+    <string name="title_activity_grids">GridsActivity</string>
+    <string name="title_activity_grid_view">GridViewActivity</string>
+    <string name="title_activity_crop">CropActivity</string>
+    <string name="title_activity_stylish_font">StylishFontActivity</string>
+    <string name="title_activity_crop_view">CropViewActivity</string>
+    <string name="title_activity_Image_crop_view">CropImageActivity</string>
+</resources>
