@@ -5,9 +5,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.MainThread
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,98 +33,155 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.quinsta.model.Font
 import com.example.quinsta.model.Fonts
 import com.example.quinsta.ui.theme.QuinstaTheme
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import java.util.*
 
 class StylishFontActivity : ComponentActivity() {
+    var isAds = true
+    private lateinit var mInterstitialAd: InterstitialAd
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+            val adRequest: AdRequest = AdRequest.Builder().build()
+
+            InterstitialAd.load(this,
+                "ca-app-pub-3940256099942544/1033173712",
+                adRequest,
+                object : InterstitialAdLoadCallback() {
+                    override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                        mInterstitialAd = interstitialAd
+                        if (isAds) {
+                            mInterstitialAd.show(this@StylishFontActivity)
+                            isAds = false
+                        }
+                        Log.i("TAG", "onAdLoaded")
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        // Handle the error
+                        Log.d("TAG", loadAdError.toString())
+                        mInterstitialAd
+                    }
+                })
+
             QuinstaTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
                 ) {
+                    Column() {
                     Greeting()
+                        Box(
+                            modifier = Modifier
+                                .background(Color.White)
+                                .fillMaxWidth()
+                        ) {
+                            AndroidView(modifier = Modifier.fillMaxWidth(), factory = { context ->
+                                AdView(context).apply {
+                                    setAdSize(AdSize.BANNER)
+                                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                                    loadAd(AdRequest.Builder().build())
+                                }
+                            })
+                        }
+                    }
                 }
             }
         }
     }
-@Composable
-@Preview(showBackground = true)
-fun Greeting() {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                backgroundColor = Color(0xff32485F), modifier = Modifier.padding(0.dp), title = {
-                    Box(
-                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "",
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .clickable {
-                                    onBackPressedDispatcher.onBackPressed()
-                                },
-                        )
-                    }
-                }, elevation = 0.dp
-            )
-        },
-        content = {
-            Column(
-                modifier = Modifier
-                    .padding(it)
-                    .fillMaxWidth()
-            ) {
-                var text by rememberSaveable { mutableStateOf("") }
-                val fontArrayList: ArrayList<Font> = ArrayList()
-                Box(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Card(
-                        shape = RoundedCornerShape(8.dp),
-                        backgroundColor = Color(0xfff5f5f5),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        TextField(value = text,
-                            onValueChange = {
-                                text = it
-                            },
-                            label = { Text("Stylish Font") },
-                            singleLine = true,
-                            placeholder = { Text("Enter the name ") })
-                    }
-                }
-                Box(
-                    modifier = Modifier.padding(20.dp, 0.dp)
-                ) {
 
-                    val charArray = text.lowercase(Locale.getDefault()).toCharArray()
-                    val strArr = arrayOfNulls<String>(44)
-                    for (i in 0..43) {
-                        strArr[i] = applyStyle(charArray, Fonts.strings[i])
-                    }
-                    fontArrayList.clear()
-                    if (text.isNotEmpty()) {
-                        for (i in 0..43) {
-                            val font = Font()
-                            font.fontText = strArr[i]!!
-                            fontArrayList.add(font)
+    @Composable
+    @Preview(showBackground = true)
+    fun Greeting() {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    backgroundColor = Color(0xff32485F),
+                    modifier = Modifier.padding(0.dp),
+                    title = {
+                        Box(
+                            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_back),
+                                contentDescription = "",
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .clickable {
+                                        onBackPressedDispatcher.onBackPressed()
+                                        isAds = false
+                                    },
+                            )
                         }
-
+                    },
+                    elevation = 0.dp
+                )
+            },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .padding(it)
+                        .fillMaxWidth()
+                ) {
+                    var text by rememberSaveable { mutableStateOf("") }
+                    val fontArrayList: ArrayList<Font> = ArrayList()
+                    Box(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(8.dp),
+                            backgroundColor = Color(0xfff5f5f5),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            TextField(value = text,
+                                onValueChange = {
+                                    text = it
+                                },
+                                label = { Text("Stylish Font") },
+                                singleLine = true,
+                                placeholder = { Text("Enter the name ") })
+                        }
                     }
-                    LazyRowItemsDemo(fontArrayList)
-                }
-            }
-        },
-    )
-}
-}
+                    Box(
+                        modifier = Modifier.padding(20.dp, 0.dp)
+                    ) {
 
+                        val charArray = text.lowercase(Locale.getDefault()).toCharArray()
+                        val strArr = arrayOfNulls<String>(44)
+                        for (i in 0..43) {
+                            strArr[i] = applyStyle(charArray, Fonts.strings[i])
+                        }
+                        fontArrayList.clear()
+                        if (text.isNotEmpty()) {
+                            for (i in 0..43) {
+                                val font = Font()
+                                font.fontText = strArr[i]!!
+                                fontArrayList.add(font)
+                            }
+
+                        }
+                        LazyRowItemsDemo(fontArrayList)
+                    }
+                }
+            },
+        )
+    }
+
+    @MainThread
+    override fun onBackPressed() {
+        onBackPressedDispatcher.onBackPressed()
+        isAds = false
+    }
+}
 
 
 @Composable
@@ -158,9 +217,7 @@ fun LazyRowItemsDemo(courseList: ArrayList<Font>) {
                                 )
                             )
                             Toast.makeText(context, "Text Copied", Toast.LENGTH_SHORT).show()
-                        },
-                        icon = R.drawable.baseline_copy,
-                        Color(0xffff7200)
+                        }, icon = R.drawable.baseline_copy, Color(0xffff7200)
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     AppIconButton(
@@ -170,9 +227,7 @@ fun LazyRowItemsDemo(courseList: ArrayList<Font>) {
                             intent2.type = "text/plain"
                             intent2.putExtra(Intent.EXTRA_TEXT, "${item.fontText}")
                             context.startActivity(Intent.createChooser(intent2, "Share via"))
-                        },
-                        icon = R.drawable.baseline_share_24,
-                        Color(0xfff52187)
+                        }, icon = R.drawable.baseline_share_24, Color(0xfff52187)
                     )
                 }
             }
@@ -182,9 +237,7 @@ fun LazyRowItemsDemo(courseList: ArrayList<Font>) {
 
 @Composable
 private fun AppIconButton(
-    onClick: () -> Unit,
-    icon: Int,
-    color: Color
+    onClick: () -> Unit, icon: Int, color: Color
 ) {
     IconButton(
         onClick = onClick, modifier = Modifier

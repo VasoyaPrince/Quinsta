@@ -8,4 +8,5 @@
     <string name="title_activity_stylish_font">StylishFontActivity</string>
     <string name="title_activity_crop_view">CropViewActivity</string>
     <string name="title_activity_Image_crop_view">CropImageActivity</string>
+    <string name="title_activity_splash">SplashActivity</string>
 </resources>

@@ -4,4 +4,7 @@
     <style name="Theme.Quinsta" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">#ff32485f</item>
     </style>
+    <style name="slpash" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
 </resources>

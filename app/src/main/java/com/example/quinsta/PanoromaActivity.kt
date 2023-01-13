@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.MainThread
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,19 +33,50 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.rememberImagePainter
 import com.example.quinsta.model.AppViewModel
 import com.example.quinsta.model.GridCount
 import com.example.quinsta.model.GridViewActivityViewModel
 import com.example.quinsta.ui.theme.QuinstaTheme
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import kotlin.math.sqrt
 
 
 class PanoromaActivity : ComponentActivity() {
     private lateinit var mainViewModel: GridViewActivityViewModel
+    var isAds = true
+    private lateinit var mInterstitialAd: InterstitialAd
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+            val adRequest: AdRequest = AdRequest.Builder().build()
+
+            InterstitialAd.load(this, "ca-app-pub-3940256099942544/1033173712", adRequest,
+                object : InterstitialAdLoadCallback() {
+                    override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                        mInterstitialAd = interstitialAd
+                        if (isAds) {
+                            mInterstitialAd.show(this@PanoromaActivity)
+                            isAds = false
+                        }
+                        Log.i("TAG", "onAdLoaded")
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        // Handle the error
+                        Log.d("TAG", loadAdError.toString())
+                        mInterstitialAd
+                    }
+                })
+
+
             QuinstaTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
@@ -76,7 +108,8 @@ class PanoromaActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .align(Alignment.CenterStart)
                                     .clickable {
-                                       onBackPressedDispatcher.onBackPressed()
+                                        onBackPressedDispatcher.onBackPressed()
+                                        isAds = false
                                     },
                             )
 //                            Image(painter = painterResource(R.drawable.ic_eye),
@@ -156,10 +189,18 @@ class PanoromaActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .background(Color.White)
-                            .padding(40.dp)
                             .fillMaxWidth()
                     ) {
-
+                        AndroidView(
+                            modifier = Modifier.fillMaxWidth(),
+                            factory = { context ->
+                                AdView(context).apply {
+                                    setAdSize(AdSize.BANNER)
+                                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                                    loadAd(AdRequest.Builder().build())
+                                }
+                            }
+                        )
                     }
                 }
             },
@@ -209,6 +250,12 @@ class PanoromaActivity : ComponentActivity() {
         mainViewModel.image = chunkedImages
         val intent = Intent(context, PanoromaViewActivity::class.java)
         startActivity(intent)
+    }
+
+    @MainThread
+    override fun onBackPressed() {
+        onBackPressedDispatcher.onBackPressed()
+        isAds = false
     }
 }
 

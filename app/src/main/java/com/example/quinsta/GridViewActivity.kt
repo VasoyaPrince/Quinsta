@@ -7,16 +7,20 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.MainThread
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.Scaffold
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,18 +33,51 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.quinsta.model.AppViewModel
 import com.example.quinsta.model.GridViewActivityViewModel
 import com.example.quinsta.ui.theme.QuinstaTheme
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 
 class GridViewActivity : ComponentActivity() {
     private lateinit var mainViewModel: GridViewActivityViewModel
+    var isAds = true
+    var isSave = true
+    private lateinit var mInterstitialAd: InterstitialAd
+    private lateinit var mInterstitialAd2: InterstitialAd
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+            val adRequest: AdRequest = AdRequest.Builder().build()
+
+
+            InterstitialAd.load(this,
+                "ca-app-pub-3940256099942544/1033173712",
+                adRequest,
+                object : InterstitialAdLoadCallback() {
+                    override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                        mInterstitialAd = interstitialAd
+                        if (isAds) {
+                            mInterstitialAd.show(this@GridViewActivity)
+                            isAds = false
+                        }
+                        Log.i("TAG", "onAdLoaded")
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        // Handle the error
+                        Log.d("TAG", loadAdError.toString())
+                        mInterstitialAd
+                    }
+                })
+
             QuinstaTheme {
                 mainViewModel = AppViewModel.getInstance(application)
-                    Greeting()
+                Greeting()
             }
         }
     }
@@ -63,7 +100,10 @@ class GridViewActivity : ComponentActivity() {
                                 contentDescription = "",
                                 modifier = Modifier
                                     .align(Alignment.CenterStart)
-                                    .clickable {},
+                                    .clickable {
+                                        onBackPressedDispatcher.onBackPressed()
+                                        isAds = false
+                                    },
                             )
                         }
                     },
@@ -101,16 +141,46 @@ class GridViewActivity : ComponentActivity() {
                             .padding(20.dp)
                             .fillMaxWidth(), contentAlignment = Alignment.Center
                     ) {
-                        Image(painter = painterResource(R.drawable.ic_save),
+                        Image(
+                            painter = painterResource(R.drawable.ic_save),
                             contentDescription = "",
                             Modifier
                                 .width(40.dp)
                                 .height(40.dp)
                                 .clickable {
-                                    for (i in mainViewModel.image) {
-                                        saveMediaToStorage(i)
+                                    val adRequest2: AdRequest = AdRequest
+                                        .Builder()
+                                        .build()
+                                    if (isSave) {
+                                        InterstitialAd.load(this@GridViewActivity,
+                                            "ca-app-pub-3940256099942544/1033173712",
+                                            adRequest2,
+                                            object : InterstitialAdLoadCallback() {
+                                                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                                                    mInterstitialAd2 = interstitialAd
+                                                    if (isAds) {
+                                                        mInterstitialAd2.show(this@GridViewActivity)
+                                                        isAds = false
+                                                    }
+                                                    Log.i("TAG", "onAdLoaded")
+                                                }
+
+                                                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                                                    Log.d("TAG", loadAdError.toString())
+                                                    mInterstitialAd2
+                                                }
+                                            })
+                                        for (i in mainViewModel.image) {
+                                            saveMediaToStorage(i)
+                                        }
+                                        isSave = false
+                                    } else {
+                                        for (i in mainViewModel.image) {
+                                            saveMediaToStorage(i)
+                                        }
                                     }
-                                }
+
+                                },
                         )
                     }
                 }
@@ -143,7 +213,14 @@ class GridViewActivity : ComponentActivity() {
 
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
             Toast.makeText(this, "save image !!", Toast.LENGTH_SHORT).show()
+            isSave = true
         }
+    }
+
+    @MainThread
+    override fun onBackPressed() {
+        onBackPressedDispatcher.onBackPressed()
+        isAds = false
     }
 }
 

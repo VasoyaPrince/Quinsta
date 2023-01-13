@@ -15,6 +15,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.quinsta.model.GridModal
 import com.example.quinsta.ui.theme.QuinstaTheme
@@ -38,12 +40,18 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 
 
 class MainActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
             QuinstaTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
@@ -97,14 +105,18 @@ class MainActivity : ComponentActivity() {
                             DropdownMenuItem(onClick = {
                                 val uri: Uri = Uri.parse("market://details?id=$packageName")
                                 val goToMarket = Intent(Intent.ACTION_VIEW, uri)
-                                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or
-                                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                                goToMarket.addFlags(
+                                    Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                                )
                                 try {
                                     startActivity(goToMarket)
                                 } catch (e: ActivityNotFoundException) {
-                                    startActivity(Intent(Intent.ACTION_VIEW,
-                                        Uri.parse("http://play.google.com/store/apps/details?id=$packageName")))
+                                    startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("http://play.google.com/store/apps/details?id=$packageName")
+                                        )
+                                    )
                                 }
                             }) {
                                 Text(text = "Rate")
@@ -114,7 +126,23 @@ class MainActivity : ComponentActivity() {
                 )
             },
             content = {
-                GridView(context = LocalContext.current, it)
+                Column() {
+                    GridView(context = LocalContext.current, it)
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White)
+                            .fillMaxWidth()
+                    ) {
+                        AndroidView(modifier = Modifier.fillMaxWidth(), factory = { context ->
+                            AdView(context).apply {
+                                setAdSize(AdSize.MEDIUM_RECTANGLE)
+                                adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                                loadAd(AdRequest.Builder().build())
+                            }
+                        })
+                    }
+                }
+
             },
         )
     }
