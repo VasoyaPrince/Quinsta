@@ -38,6 +38,7 @@ import coil.compose.rememberImagePainter
 import com.example.quinsta.model.AppViewModel
 import com.example.quinsta.model.GridCount
 import com.example.quinsta.model.GridViewActivityViewModel
+import com.example.quinsta.model.Value
 import com.example.quinsta.ui.theme.QuinstaTheme
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -58,7 +59,7 @@ class PanoromaActivity : ComponentActivity() {
 
             val adRequest: AdRequest = AdRequest.Builder().build()
 
-            InterstitialAd.load(this, "ca-app-pub-3940256099942544/1033173712", adRequest,
+            InterstitialAd.load(this, Value.googleAds.interstitial_panaroma, adRequest,
                 object : InterstitialAdLoadCallback() {
                     override fun onAdLoaded(interstitialAd: InterstitialAd) {
                         mInterstitialAd = interstitialAd
@@ -196,7 +197,7 @@ class PanoromaActivity : ComponentActivity() {
                             factory = { context ->
                                 AdView(context).apply {
                                     setAdSize(AdSize.BANNER)
-                                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                                    adUnitId = Value.googleAds.banner_panaroma
                                     loadAd(AdRequest.Builder().build())
                                 }
                             }

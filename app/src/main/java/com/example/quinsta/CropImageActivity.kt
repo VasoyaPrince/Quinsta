@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.quinsta.crop.demo.ImageCropDemo
+import com.example.quinsta.model.Value
 import com.example.quinsta.ui.theme.QuinstaTheme
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
@@ -35,7 +36,7 @@ class CropImageActivity : ComponentActivity() {
             val adRequest: AdRequest = AdRequest.Builder().build()
 
             InterstitialAd.load(this,
-                "ca-app-pub-3940256099942544/1033173712",
+                Value.googleAds.interstitial_nocrop,
                 adRequest,
                 object : InterstitialAdLoadCallback() {
                     override fun onAdLoaded(interstitialAd: InterstitialAd) {

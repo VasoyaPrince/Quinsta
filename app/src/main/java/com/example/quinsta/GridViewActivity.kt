@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.quinsta.model.AppViewModel
 import com.example.quinsta.model.GridViewActivityViewModel
+import com.example.quinsta.model.Value
 import com.example.quinsta.ui.theme.QuinstaTheme
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
@@ -56,7 +57,7 @@ class GridViewActivity : ComponentActivity() {
 
 
             InterstitialAd.load(this,
-                "ca-app-pub-3940256099942544/1033173712",
+                Value.googleAds.interstitial_grids_view,
                 adRequest,
                 object : InterstitialAdLoadCallback() {
                     override fun onAdLoaded(interstitialAd: InterstitialAd) {

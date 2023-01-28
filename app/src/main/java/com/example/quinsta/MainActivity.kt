@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.quinsta.model.GridModal
+import com.example.quinsta.model.Value
 import com.example.quinsta.ui.theme.QuinstaTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
@@ -136,7 +137,7 @@ class MainActivity : ComponentActivity() {
                         AndroidView(modifier = Modifier.fillMaxWidth(), factory = { context ->
                             AdView(context).apply {
                                 setAdSize(AdSize.MEDIUM_RECTANGLE)
-                                adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                                adUnitId = Value.googleAds.banner_home
                                 loadAd(AdRequest.Builder().build())
                             }
                         })
