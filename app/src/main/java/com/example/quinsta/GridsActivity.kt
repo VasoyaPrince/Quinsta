@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -50,8 +51,9 @@ import kotlin.math.sqrt
 
 class GridsActivity : ComponentActivity() {
     private lateinit var mainViewModel: GridViewActivityViewModel
-        var isAds = true
-        private lateinit var mInterstitialAd: InterstitialAd
+    var isAds = true
+    var isSelected = false
+    private lateinit var mInterstitialAd: InterstitialAd
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -112,11 +114,11 @@ class GridsActivity : ComponentActivity() {
                                         isAds = false
                                     },
                             )
-                            Image(painter = painterResource(R.drawable.ic_eye),
-                                contentDescription = "",
-                                modifier = Modifier.clickable {
-
-                                })
+//                            Image(painter = painterResource(R.drawable.ic_eye),
+//                                contentDescription = "",
+//                                modifier = Modifier.clickable {
+//
+//                                })
                         }
                     },
                     elevation = 0.dp,
@@ -128,7 +130,7 @@ class GridsActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier.padding(it)
                 ) {
-                    val imageUri = remember { mutableStateOf<Uri?>(uri)}
+                    val imageUri = remember { mutableStateOf<Uri?>(uri) }
                     val courseList = remember {
                         mutableStateListOf(
                             GridCount(3, true),
@@ -145,7 +147,13 @@ class GridsActivity : ComponentActivity() {
                         val launcher2 = rememberLauncherForActivityResult(
                             ActivityResultContracts.GetContent()
                         ) { uri ->
-                            imageUri.value = uri
+                            if (uri == null) {
+                                imageUri.value =
+                                    Uri.parse("android.resource://com.example.quinsta/drawable/ic_image")
+                            } else {
+                                isSelected = true
+                                imageUri.value = uri
+                            }
                         }
 
                         Image(
@@ -156,6 +164,7 @@ class GridsActivity : ComponentActivity() {
                                 .size(300.dp)
                                 .clickable {
                                     launcher2.launch("image/*")
+                                    isSelected = true
                                 },
                         )
                     }
@@ -167,10 +176,11 @@ class GridsActivity : ComponentActivity() {
                             .fillMaxWidth()
                     ) {
                         Row {
-                            Image(
-                                painter = painterResource(R.drawable.ic_round_close_24),
-                                contentDescription = ""
-                            )
+                            Image(painter = painterResource(R.drawable.ic_round_close_24),
+                                contentDescription = "",
+                                modifier = Modifier.clickable {
+                                    onBackPressedDispatcher.onBackPressed()
+                                })
                         }
 
                         Row {
@@ -179,14 +189,23 @@ class GridsActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .padding(300.dp, 0.dp, 0.dp, 0.dp)
                                     .clickable {
-                                        val count =
-                                            courseList.first { item -> item.isSelected }.grid
-                                        splitImage(
-                                            context,
-                                            count,
-                                            imageUri.value!!,
-                                            count
-                                        )
+
+                                        if (isSelected) {
+
+                                            val count =
+                                                courseList.first { item -> item.isSelected }.grid
+                                            splitImage(
+                                                context, count, imageUri.value!!, count
+                                            )
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "please select image ",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show()
+                                        }
                                     })
                         }
                     }
@@ -195,16 +214,13 @@ class GridsActivity : ComponentActivity() {
                             .background(Color.White)
                             .fillMaxWidth()
                     ) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxWidth(),
-                            factory = { context ->
-                                AdView(context).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = Value.googleAds.banner_grids
-                                    loadAd(AdRequest.Builder().build())
-                                }
+                        AndroidView(modifier = Modifier.fillMaxWidth(), factory = { context ->
+                            AdView(context).apply {
+                                setAdSize(AdSize.BANNER)
+                                adUnitId = Value.googleAds.banner_grids
+                                loadAd(AdRequest.Builder().build())
                             }
-                        )
+                        })
                     }
                 }
             },
@@ -254,6 +270,7 @@ class GridsActivity : ComponentActivity() {
         val intent = Intent(context, GridViewActivity::class.java)
         startActivity(intent)
     }
+
     @MainThread
     override fun onBackPressed() {
         onBackPressedDispatcher.onBackPressed()

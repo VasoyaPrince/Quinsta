@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -52,6 +53,7 @@ import kotlin.math.sqrt
 class PanoromaActivity : ComponentActivity() {
     private lateinit var mainViewModel: GridViewActivityViewModel
     var isAds = true
+    var isSelected = false
     private lateinit var mInterstitialAd: InterstitialAd
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +61,9 @@ class PanoromaActivity : ComponentActivity() {
 
             val adRequest: AdRequest = AdRequest.Builder().build()
 
-            InterstitialAd.load(this, Value.googleAds.interstitial_panaroma, adRequest,
+            InterstitialAd.load(this,
+                Value.googleAds.interstitial_panaroma,
+                adRequest,
                 object : InterstitialAdLoadCallback() {
                     override fun onAdLoaded(interstitialAd: InterstitialAd) {
                         mInterstitialAd = interstitialAd
@@ -145,7 +149,13 @@ class PanoromaActivity : ComponentActivity() {
                         val launcher2 = rememberLauncherForActivityResult(
                             ActivityResultContracts.GetContent()
                         ) { uri ->
-                            imageUri.value = uri
+                            if (uri == null) {
+                                imageUri.value =
+                                    Uri.parse("android.resource://com.example.quinsta/drawable/ic_image")
+                            } else {
+                                isSelected = true
+                                imageUri.value = uri
+                            }
                         }
 
                         Image(
@@ -156,6 +166,7 @@ class PanoromaActivity : ComponentActivity() {
                                 .size(300.dp)
                                 .clickable {
                                     launcher2.launch("image/*")
+
                                 },
                         )
                     }
@@ -167,10 +178,11 @@ class PanoromaActivity : ComponentActivity() {
                             .fillMaxWidth()
                     ) {
                         Row {
-                            Image(
-                                painter = painterResource(R.drawable.ic_round_close_24),
-                                contentDescription = ""
-                            )
+                            Image(painter = painterResource(R.drawable.ic_round_close_24),
+                                contentDescription = "",
+                                modifier = Modifier.clickable {
+                                    onBackPressedDispatcher.onBackPressed()
+                                })
                         }
 
                         Row {
@@ -179,11 +191,23 @@ class PanoromaActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .padding(300.dp, 0.dp, 0.dp, 0.dp)
                                     .clickable {
-                                        splitImage2(
-                                            context,
-                                            courseList.first { item -> item.isSelected }.grid,
-                                            imageUri.value!!
-                                        )
+
+                                        if (isSelected) {
+                                            splitImage2(
+                                                context,
+                                                courseList.first { item -> item.isSelected }.grid,
+                                                imageUri.value!!
+                                            )
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "Please select image",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                .show()
+                                        }
+
                                     })
                         }
                     }
@@ -192,16 +216,13 @@ class PanoromaActivity : ComponentActivity() {
                             .background(Color.White)
                             .fillMaxWidth()
                     ) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxWidth(),
-                            factory = { context ->
-                                AdView(context).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = Value.googleAds.banner_panaroma
-                                    loadAd(AdRequest.Builder().build())
-                                }
+                        AndroidView(modifier = Modifier.fillMaxWidth(), factory = { context ->
+                            AdView(context).apply {
+                                setAdSize(AdSize.BANNER)
+                                adUnitId = Value.googleAds.banner_panaroma
+                                loadAd(AdRequest.Builder().build())
                             }
-                        )
+                        })
                     }
                 }
             },
